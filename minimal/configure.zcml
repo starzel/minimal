@@ -1,0 +1,11 @@
+<configure xmlns="http://namespaces.zope.org/zope"
+           xmlns:browser="http://namespaces.zope.org/browser">
+
+  <browser:page
+      name="demo"
+      for="*"
+      class=".demo.Demo"
+      permission="cmf.AddPortalContent"
+      />
+
+</configure>

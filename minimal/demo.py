@@ -16,35 +16,29 @@ class Demo(BrowserView):
 
     def __call__(self, amount=3, remote=False):
         self.amount = amount
-        portal = api.portal.get()
         if not remote:
-            self.create_jokes(portal)
+            self.create_jokes()
         else:
             self.create_remote_jokes()
-        return self.request.response.redirect(portal.absolute_url())
+        return self.request.response.redirect(self.context.absolute_url())
 
-    def create_jokes(self, container):
-        """Create some jokes"""
+    def create_jokes(self):
+        """Create some jokes locally"""
         alsoProvides(self.request, IDisableCSRFProtection)
         plone_view = api.content.get_view('plone', self.context, self.request)
         jokes = self.random_jokes()
-        # breakpoint()
-        for index, data in enumerate(jokes, start=1):
+        for data in jokes:
             joke = data['joke']
             random_id = ''.join(random.choice(ascii_lowercase) for i in range(6))
             joke = api.content.create(
-                container=container,
+                container=self.context,
                 type='Document',
-                title=plone_view.cropText(joke, length=20),
+                title=plone_view.cropText(joke, length=40),
                 id=random_id,
                 description=joke,
             )
-            logger.info(f'Created joke {joke.absolute_url()}')
-        api.portal.show_message(f'Created {index} jokes!', self.request)
-
-    def random_jokes(self):
-        jokes = requests.get(f'http://api.icndb.com/jokes/random/{self.amount}')
-        return json.loads(jokes.text)['value']
+            logger.debug(f'Created joke {joke.absolute_url()}')
+        api.portal.show_message(f'Created {self.amountcZ} jokes!', self.request)
 
     def create_remote_jokes(self, url=None):
         """Create some jokes on demo.plone.org"""
@@ -57,7 +51,7 @@ class Demo(BrowserView):
             joke = data['joke']
             payload = {
                 '@type': 'Document',
-                'title': plone_view.cropText(joke, length=20),
+                'title': plone_view.cropText(joke, length=40),
                 'description': joke,
                 'id': ''.join(random.choice(ascii_lowercase) for i in range(6)),
             }
@@ -67,5 +61,10 @@ class Demo(BrowserView):
                 json=payload,
                 auth=auth,
             )
+            response.raise_for_status()
             logger.info(f'Created joke {response.json()["@id"]}')
         api.portal.show_message(f'Created {self.amount} jokes!', self.request)
+
+    def random_jokes(self):
+        jokes = requests.get(f'http://api.icndb.com/jokes/random/{self.amount}?escape=javascript')
+        return json.loads(jokes.text)['value']

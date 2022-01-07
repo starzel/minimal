@@ -9,6 +9,7 @@ setup(
     author_email='bauer@starzel.de',
     license='GPL version 2',
     packages=['minimal'],
+    include_package_data=True,
     zip_safe=False,
     entry_points={'z3c.autoinclude.plugin': ['target = plone']},
     )
